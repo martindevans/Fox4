@@ -1,0 +1,84 @@
+# Fox4 RL Training Configuration
+
+# Random seed for reproducibility
+seed: 42
+
+# Environment configuration
+environment:
+  aip_pilot_path: "../csharp/AIPSim/AIPilot.exe"
+  max_episode_length: 300
+  
+  # Simulation config template
+  config_template:
+    map: "../csharp/Map/"
+    debugAllied: true
+    spawnDist: 200
+    maxTime: 300
+  
+  # Reward shaping parameters
+  reward_config:
+    hit_enemy: 100.0
+    kill_enemy: 500.0
+    died: -200.0
+    fuel_penalty: -0.1
+    time_penalty: -0.01
+    damage_dealt: 50.0
+    survival_bonus: 1.0
+
+# Training configuration
+training:
+  # Main parameters
+  algorithm: "PPO"  # PPO, SAC, or TD3
+  total_timesteps: 1000000
+  num_envs: 4  # Number of parallel environments
+  
+  # Directories
+  experiment_dir: "./experiments/fox4_training"
+  
+  # Evaluation settings
+  eval_freq: 10000  # Evaluate every N steps
+  save_freq: 25000  # Save checkpoint every N steps
+  
+  # PPO-specific parameters
+  ppo_params:
+    learning_rate: 0.0003
+    n_steps: 2048
+    batch_size: 64
+    n_epochs: 10
+    gamma: 0.99
+    gae_lambda: 0.95
+    clip_range: 0.2
+    ent_coef: 0.0
+    vf_coef: 0.5
+    max_grad_norm: 0.5
+    
+    # Network architecture
+    policy_kwargs:
+      net_arch:
+        - 512
+        - 256
+        - 128
+      activation_fn: "relu"
+  
+  # SAC-specific parameters (alternative)
+  sac_params:
+    learning_rate: 0.0003
+    buffer_size: 1000000
+    learning_starts: 100
+    batch_size: 256
+    tau: 0.005
+    gamma: 0.99
+    train_freq: 1
+    gradient_steps: 1
+    
+  # TD3-specific parameters (alternative)
+  td3_params:
+    learning_rate: 0.001
+    buffer_size: 1000000
+    learning_starts: 100
+    batch_size: 256
+    tau: 0.005
+    gamma: 0.99
+    train_freq: 1
+    gradient_steps: 1
+    policy_delay: 2
