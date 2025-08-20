@@ -1,0 +1,7 @@
+{
+	"allied": "../bin/Debug/net6.0/AIPProvider.dll",
+	"enemy": "../bin/Debug/net6.0/AIPProvider.dll",
+	"map": "../../Map/",
+	"debugEnemy": true,
+	"spawnDist": 200
+}

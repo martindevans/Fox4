@@ -1,0 +1,6 @@
+.vs
+csharp/AIPProvider/bin
+csharp/AIPProvider/obj
+csharp/AIPSim
+csharp/HeadlessClient
+csharp/Map
