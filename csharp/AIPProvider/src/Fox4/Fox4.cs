@@ -1,9 +1,9 @@
 ﻿using AIPProvider.Extensions;
+using AIPProvider.Fox4.ONNX.Tensors;
 using AIPProvider.Fox4.ONNX.Tensors.Input;
 using AIPProvider.Fox4.ONNX.Tensors.Output;
 using Microsoft.ML.OnnxRuntime;
 using System.Numerics;
-using AIPProvider.Fox4.ONNX.Tensors;
 using UnityGERunner.UnityApplication;
 
 namespace AIPProvider.Fox4;
@@ -27,7 +27,7 @@ public sealed class Fox4
 
     public string Name { get; init; }
 
-    public Fox4(IAIPProvider provider, string modelPath, bool logDataset = false)
+    public Fox4(IAIPProvider provider, int id, string modelPath, bool logDataset = false)
     {
         _provider = provider;
 
@@ -43,7 +43,7 @@ public sealed class Fox4
         _outputReader = OutputTensorReaderFactory.Get(_session.ModelMetadata.CustomMetadataMap.GetValueOrDefault("output_tensor_version") ?? "v1");
 
         if (logDataset)
-            _logDataset = DatasetLogger.Create(_inputBuilder, _outputReader);
+            _logDataset = DatasetLogger.Create(id, _inputBuilder, _outputReader);
     }
 
     public void Dispose()
