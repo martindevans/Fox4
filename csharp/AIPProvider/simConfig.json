@@ -3,5 +3,6 @@
 	"enemy": "../bin/Debug/net6.0/AIPProvider.dll",
 	"map": "../../Map/",
 	"debugEnemy": true,
-	"spawnDist": 200
+	"spawnDist": 200,
+	"alliedArgs": [ "--log-tensors" ]
 }
