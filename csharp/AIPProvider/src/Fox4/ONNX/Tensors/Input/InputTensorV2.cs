@@ -33,7 +33,7 @@ public class InputTensorV2
     public DenseTensor<float> Build(ref OutboundState state, Vector3 angleRate, Map map)
     {
         var speed = state.kinematics.velocity.vec3.magnitude;
-        var dir = state.kinematics.velocity.vec3 / speed;
+        var dir = state.kinematics.velocity.vec3 / Math.Max(0.001f, speed);
 
         float[] data =
         [

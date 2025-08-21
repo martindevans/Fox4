@@ -53,7 +53,7 @@ public class InputTensorV1
         var radar_altitude = state.kinematics.position.y - map.GetHeightAtSubpoint(state.kinematics.position);
 
         var speed = state.kinematics.velocity.vec3.magnitude;
-        var dir = state.kinematics.velocity.vec3 / speed;
+        var dir = state.kinematics.velocity.vec3 / Math.Max(0.001f, speed);
 
         var target = state.visualTargets.Length == 0 ? default : state.visualTargets[0];
         var localDir = state.kinematics.rotation.quat * target.direction;
