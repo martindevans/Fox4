@@ -17,6 +17,37 @@ public class InputTensorV1
     private const float SPEED_NORM = 686;       // Mach 2
     private const float ENERGY_NORM = 100_000;  // Arbitrary choice
 
+    public IReadOnlyList<string> Columns { get; } =
+    [
+        "fuel",
+        "gun_ammo",
+        "gun_ammo_available",
+
+        "fwd.x", "fwd.y", "fwd.z",
+        "right.x", "right.y", "right.z",
+        "up.x", "up.y", "up.z",
+
+        "pitch_rate",
+        "yaw_rate",
+        "roll_rate",
+
+        "radar_altitude",
+        "altitude",
+
+        "speed",
+        "dir.x", "dir.y", "dir.z",
+
+        "localDir.x", "localDir.y", "localDir.z",
+        "target.closure",
+
+        "tgt_fwd.x", "tgt_fwd.y", "tgt_fwd.z",
+        "tgt_right.x", "tgt_right.y", "tgt_right.z",
+        "tgt_up.x", "tgt_up.y", "tgt_up.z",
+
+        "kinetic_energy",
+        "potential_energy",
+    ];
+
     public DenseTensor<float> Build(ref OutboundState state, Vector3 angleRate, Map map)
     {
         var radar_altitude = state.kinematics.position.y - map.GetHeightAtSubpoint(state.kinematics.position);

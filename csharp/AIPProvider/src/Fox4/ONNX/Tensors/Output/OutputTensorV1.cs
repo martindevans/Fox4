@@ -5,6 +5,18 @@ namespace AIPProvider.Fox4.ONNX.Tensors.Output;
 public class OutputTensorV1
     : IOutputTensorReader
 {
+    public IReadOnlyList<string> Columns { get; } =
+    [
+        "trigger",
+
+        "raw_throttle",
+        "afterburner",
+
+        "yaw",
+        "pitch",
+        "roll",
+    ];
+
     public InboundState Read(ReadOnlySpan<float> tensor, OutboundState state)
     {
         var builder = new ActionsBuilder(state);
