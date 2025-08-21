@@ -1,0 +1,46 @@
+version: "3"
+
+vars:
+  sim_project_path: csharp/AIPProvider
+  headless_client_path: csharp/HeadlessClient/HeadlessClient.exe
+  sim_path: csharp/AIPProvider/sim
+  rl_path: python
+  configuration: Debug
+
+tasks:
+  build:
+    desc: Build the C# project (restore + build)
+    cmds:
+      - dotnet build "{{.sim_project_path}}/AIPProvider.csproj" --configuration "{{.configuration}}"
+    silent: false
+
+  gen-model:
+    desc: Generates a random ONNX model for the simulator
+    cmds:
+      - "python {{.rl_path}}/create_model.py --random"
+
+  cp-model:
+    desc: Copy the generated model to the simulation directory
+    cmds:
+      - >-
+        python -c 'import shutil, os; dest=os.path.join("{{.sim_path}}","model.onnx"); os.makedirs(os.path.dirname(dest), exist_ok=True); shutil.copy("model.onnx", dest)'
+
+  run-sim:
+    desc: Run the simulation
+    dir: "{{.sim_project_path}}"
+    cmds:
+      - "cmd /C onBuild.bat"
+
+  replay:
+    desc: View a replay of the last sim run
+    cmds:
+      - "{{.headless_client_path}} {{.sim_path}}/result.vtgr"
+    silent: false
+
+  test-run:
+    desc: Run gen-model, cp-model, run-sim and replay in sequence
+    cmds:
+      - task gen-model
+      - task cp-model
+      - task run-sim
+      - task replay
