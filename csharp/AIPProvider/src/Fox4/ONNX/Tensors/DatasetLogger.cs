@@ -1,5 +1,7 @@
 ﻿using System.Text;
 using AIPProvider.Extensions;
+using AIPProvider.Fox4.ONNX.Tensors.Input;
+using AIPProvider.Fox4.ONNX.Tensors.Output;
 
 namespace AIPProvider.Fox4.ONNX.Tensors;
 
@@ -9,10 +11,21 @@ public sealed class DatasetLogger
     private readonly StreamWriter _inputs;
     private readonly StreamWriter _outputs;
 
-    public DatasetLogger()
+    private DatasetLogger(StreamWriter inputs, StreamWriter outputs)
     {
-        _inputs = File.CreateText("input_tensors.csv");
-        _outputs = File.CreateText("output_tensors.csv");
+        _inputs = inputs;
+        _outputs = outputs;
+    }
+
+    public static DatasetLogger Create(IInputTensorBuilder inputs, IOutputTensorReader outputs)
+    {
+        var inputWriter = File.CreateText("input_tensors.csv");
+        var outputWriter = File.CreateText("output_tensors.csv");
+
+        inputWriter.WriteLine(string.Join(", ", inputs.Columns));
+        outputWriter.WriteLine(string.Join(", ", outputs.Columns));
+
+        return new DatasetLogger(inputWriter, outputWriter);
     }
 
     public void Log(ReadOnlySpan<float> inputTensor, ReadOnlySpan<float> outputTensor)
@@ -28,7 +41,7 @@ public sealed class DatasetLogger
 
     public void Dispose()
     {
-        _inputs.Dispose();
-        _outputs.Dispose();
+        _inputs.Flush();
+        _outputs.Flush();
     }
 }

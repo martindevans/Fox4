@@ -4,6 +4,8 @@ namespace AIPProvider.Fox4.ONNX.Tensors.Output;
 
 public interface IOutputTensorReader
 {
+    IReadOnlyList<string> Columns { get; }
+
     InboundState Read(ReadOnlySpan<float> tensor, OutboundState state);
 }
 

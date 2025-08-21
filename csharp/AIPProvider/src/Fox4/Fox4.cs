@@ -31,9 +31,6 @@ public sealed class Fox4
     {
         _provider = provider;
 
-        if (logDataset)
-            _logDataset = new DatasetLogger();
-
         _session = new InferenceSession(modelPath);
         _options = new RunOptions();
 
@@ -44,6 +41,9 @@ public sealed class Fox4
 
         _inputBuilder = InputTensorBuilderFactory.Get(_session.ModelMetadata.CustomMetadataMap.GetValueOrDefault("input_tensor_version") ?? "v1");
         _outputReader = OutputTensorReaderFactory.Get(_session.ModelMetadata.CustomMetadataMap.GetValueOrDefault("output_tensor_version") ?? "v1");
+
+        if (logDataset)
+            _logDataset = DatasetLogger.Create(_inputBuilder, _outputReader);
     }
 
     public void Dispose()

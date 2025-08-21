@@ -6,6 +6,8 @@ namespace AIPProvider.Fox4.ONNX.Tensors.Input;
 
 public interface IInputTensorBuilder
 {
+    IReadOnlyList<string> Columns { get; }
+
     DenseTensor<float> Build(ref OutboundState state, Vector3 angleRate, Map map);
 }
 
