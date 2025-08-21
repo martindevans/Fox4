@@ -15,6 +15,7 @@ public class InputTensorV1
     private const float ROLL_RATE_NORM = 360;   // 1 full rotation per second
     private const float ALT_NORM = 15240;       // 50,000ft
     private const float SPEED_NORM = 686;       // Mach 2
+    private const float ENERGY_NORM = 100_000;  // Arbitrary choice
 
     public DenseTensor<float> Build(ref OutboundState state, Vector3 angleRate, Map map)
     {
