@@ -11,6 +11,11 @@ public readonly ref struct OutputTensorReader
         _data = ort.GetTensorDataAsSpan<float>();
     }
 
+    public OutputTensorReader(ReadOnlySpan<float> data)
+    {
+        _data = data;
+    }
+
     /// <summary>
     /// Trigger, any value > 0 is true
     /// </summary>
