@@ -3,10 +3,11 @@ import torch
 import torch.nn as nn
 from typing import Tuple
 
+
 class Fox4Network(nn.Module):
     """Neural network for Fox4. (Awoo, sorry I had to :<)"""
     
-    def __init__(self, input_size: int = 36, hidden_sizes: Tuple[int, ...] = (256, 128, 128)):
+    def __init__(self, input_size: int = 36, hidden_sizes: Tuple[int, ...] = (512, 256, 128)):
         super().__init__()
         
         self.input_size = input_size
