@@ -15,7 +15,7 @@ public static class OutputTensorReaderFactory
         {
             "v1" => new OutputTensorV1(),
 
-            _ => throw new ArgumentException($"Unknown input tensor type: {version}")
+            _ => throw new ArgumentException($"Unknown output tensor type: {version}")
         };
     }
 }
