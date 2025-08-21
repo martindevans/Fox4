@@ -30,7 +30,7 @@ public readonly ref struct OutputTensorReader
     /// <summary>
     /// True throttle value to return to sim, combining <see cref="RawThrottle"/> and <see cref="Afterburner"/>
     /// </summary>
-    public float Throttle => Afterburner ? 1 : Throttle * 0.749f;
+    public float Throttle => Afterburner ? 1 : RawThrottle * 0.749f;
 
     /// <summary>
     /// Yaw, [-1, 1] range

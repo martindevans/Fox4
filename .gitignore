@@ -1,4 +1,7 @@
 .vs
+tmp
+model.onnx
+__pycache__
 csharp/AIPProvider/bin
 csharp/AIPProvider/obj
 csharp/AIPSim
