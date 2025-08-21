@@ -23,7 +23,7 @@ public class Fox4Provider
         NativeLibrary.Load(onnxRuntimePath);
 
         // Create inner pilot, responsible for running model
-        _pilot = new Fox4(this, "model.onnx", info.args.Contains("--log-tensors"));
+        _pilot = new Fox4(this, info.id, "model.onnx", info.args.Contains("--log-tensors"));
 
         // Request a gun and no other equipment
         return new SetupActions

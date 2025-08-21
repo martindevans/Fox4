@@ -17,10 +17,10 @@ public sealed class DatasetLogger
         _outputs = outputs;
     }
 
-    public static DatasetLogger Create(IInputTensorBuilder inputs, IOutputTensorReader outputs)
+    public static DatasetLogger Create(int id, IInputTensorBuilder inputs, IOutputTensorReader outputs)
     {
-        var inputWriter = File.CreateText("input_tensors.csv");
-        var outputWriter = File.CreateText("output_tensors.csv");
+        var inputWriter = File.CreateText($"input_tensors-{id}.csv");
+        var outputWriter = File.CreateText($"output_tensors-{id}.csv");
 
         inputWriter.WriteLine(string.Join(", ", inputs.Columns));
         outputWriter.WriteLine(string.Join(", ", outputs.Columns));
@@ -37,6 +37,9 @@ public sealed class DatasetLogger
         builder.Clear();
         builder.AppendJoin(", ", outputTensor);
         _outputs.WriteLine(builder);
+
+        _inputs.Flush();
+        _outputs.Flush();
     }
 
     public void Dispose()

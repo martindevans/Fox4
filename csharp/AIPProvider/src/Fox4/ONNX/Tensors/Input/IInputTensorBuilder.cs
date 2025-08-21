@@ -18,6 +18,7 @@ public static class InputTensorBuilderFactory
         return (version) switch
         {
             "v1" => new InputTensorV1(),
+            "v2" => new InputTensorV2(),
 
             _ => throw new ArgumentException($"Unknown input tensor type: {version}")
         };
