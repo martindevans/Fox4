@@ -3,6 +3,7 @@ using AIPProvider.Fox4.ONNX.Tensors.Input;
 using AIPProvider.Fox4.ONNX.Tensors.Output;
 using Microsoft.ML.OnnxRuntime;
 using System.Numerics;
+using AIPProvider.Fox4.ONNX.Tensors;
 using UnityGERunner.UnityApplication;
 
 namespace AIPProvider.Fox4;
@@ -10,6 +11,7 @@ namespace AIPProvider.Fox4;
 public sealed class Fox4
     : IDisposable
 {
+    private readonly IAIPProvider _provider;
     private readonly RunOptions _options;
     private readonly InferenceSession _session;
 
@@ -21,10 +23,17 @@ public sealed class Fox4
     private float? _previousTime;
     private Vector3? _previousEulerAngles;
 
+    private readonly DatasetLogger? _logDataset;
+
     public string Name { get; init; }
 
-    public Fox4(string modelPath)
+    public Fox4(IAIPProvider provider, string modelPath, bool logDataset = false)
     {
+        _provider = provider;
+
+        if (logDataset)
+            _logDataset = new DatasetLogger();
+
         _session = new InferenceSession(modelPath);
         _options = new RunOptions();
 
@@ -41,6 +50,7 @@ public sealed class Fox4
     {
         _session.Dispose();
         _options.Dispose();
+        _logDataset?.Dispose();
     }
 
     public InboundState Update(OutboundState state)
@@ -79,7 +89,12 @@ public sealed class Fox4
         using var session = new InferenceSession("model.onnx");
         using var outputs = session.Run(_options, inputs, _outputNames);
 
+        var outputsSpan = outputs[0].GetTensorDataAsSpan<float>();
+
+        // Log tensor data to CSV
+        _logDataset?.Log(inputTensor.Buffer.Span, outputsSpan);
+
         // Read outputs
-        return _outputReader.Read(outputs[0].GetTensorDataAsSpan<float>(), state);
+        return _outputReader.Read(outputsSpan, state);
     }
 }
