@@ -65,8 +65,8 @@ public class InputTensorV1
             ..targetLocalRot.EncodeFrameOfReference(),
 
             // Energy state
-            ke_energy,
-            pe_energy,
+            ke_energy / ENERGY_NORM,
+            pe_energy / ENERGY_NORM,
         ];
 
         return new DenseTensor<float>(data, [1, data.Length]);
