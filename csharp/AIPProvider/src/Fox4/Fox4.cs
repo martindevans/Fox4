@@ -43,7 +43,7 @@ public sealed class Fox4
         modelPath = modelPath.Replace("{{PILOT_ID}}", id.ToString());
         _session = new InferenceSession(modelPath);
 
-        Name = $"Fox4 v{_session.ModelMetadata.Version}";
+        Name = $"Fox4 v{_session.ModelMetadata.CustomMetadataMap.GetValueOrDefault("version", "unknown")}";
 
         _inputBuilder = InputTensorBuilderFactory.Get(_session.ModelMetadata.CustomMetadataMap.GetValueOrDefault("input_tensor_version") ?? "v1");
         _outputReader = OutputTensorReaderFactory.Get(_session.ModelMetadata.CustomMetadataMap.GetValueOrDefault("output_tensor_version") ?? "v1");
@@ -90,17 +90,17 @@ public sealed class Fox4
 
         // Inference forward pass
         using var outputs = _session.Run(_runOptions, inputs, [OUTPUT_TENSOR]);
-        var outputsSpan = outputs[0].GetTensorDataAsSpan<float>().ToArray();
+        var outputsArr = outputs[0].GetTensorDataAsSpan<float>().ToArray();
 
         // Apply output randomisation
         if (_outputRandStd > 0)
-            for (var i = 0; i < outputs.Count; i++)
-                outputsSpan[i] += _random.NextGaussian(mean: 0, dev: _outputRandStd);
+            for (var i = 0; i < outputsArr.Length; i++)
+                outputsArr[i] += _random.NextGaussian(mean: 0, dev: _outputRandStd);
 
         // Log tensor data to CSV
-        _logDataset?.Log(inputTensor.Buffer.Span, outputsSpan);
+        _logDataset?.Log(inputTensor.Buffer.Span, outputsArr);
 
         // Read outputs
-        return _outputReader.Read(outputsSpan, state);
+        return _outputReader.Read(outputsArr, state);
     }
 }
