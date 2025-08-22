@@ -12,12 +12,9 @@ public sealed class Fox4
     : IDisposable
 {
     private readonly IAIPProvider _provider;
-    private readonly RunOptions _options;
-    private readonly InferenceSession _session;
 
-    private readonly string _inputName;
+    private readonly InferenceSession _session;
     private readonly IInputTensorBuilder _inputBuilder;
-    private readonly string[] _outputNames;
     private readonly IOutputTensorReader _outputReader;
 
     private float? _previousTime;
@@ -25,17 +22,13 @@ public sealed class Fox4
 
     private readonly DatasetLogger? _logDataset;
 
-    public string Name { get; init; }
+    public string Name { get; }
 
     public Fox4(IAIPProvider provider, int id, string modelPath, bool logDataset = false)
     {
         _provider = provider;
 
         _session = new InferenceSession(modelPath);
-        _options = new RunOptions();
-
-        _inputName = _session.InputMetadata.Keys.First();
-        _outputNames = _session.OutputNames.ToArray();
 
         Name = $"Fox4 v{_session.ModelMetadata.Version}";
 
@@ -49,7 +42,6 @@ public sealed class Fox4
     public void Dispose()
     {
         _session.Dispose();
-        _options.Dispose();
         _logDataset?.Dispose();
     }
 
@@ -79,16 +71,12 @@ public sealed class Fox4
         using var inputTensorOrt = OrtValue.CreateTensorValueFromMemory(OrtMemoryInfo.DefaultInstance, inputTensor.Buffer, [ 1, inputTensor.Length ]);
         var inputs = new Dictionary<string, OrtValue>
         {
-            { _inputName, inputTensorOrt }
+            { "input", inputTensorOrt }
         };
 
         // Inference forward pass
-        //using var outputs = _session.Run(_options, inputs, _outputNames);
-
-        // HACK!! This works around the issue
-        using var session = new InferenceSession("model.onnx");
-        using var outputs = session.Run(_options, inputs, _outputNames);
-
+        using var options = new RunOptions();
+        using var outputs = _session.Run(options, inputs, [ "output" ]);
         var outputsSpan = outputs[0].GetTensorDataAsSpan<float>();
 
         // Log tensor data to CSV
