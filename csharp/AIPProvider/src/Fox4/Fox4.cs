@@ -26,13 +26,21 @@ public sealed class Fox4
 
     private readonly DatasetLogger? _logDataset;
 
+    private readonly Random _random;
+    private readonly float _outputRandStd;
+
     public string Name { get; }
 
-    public Fox4(IAIPProvider provider, int id, string modelPath, bool logDataset = false)
+    public Fox4(IAIPProvider provider, int id, string modelPath, bool logDataset, float outputRandStd)
     {
         _provider = provider;
 
+        _random = new Random(id * 3452346 + (int)DateTime.UtcNow.Ticks);
+        _outputRandStd = outputRandStd;
+
         _runOptions = new RunOptions();
+
+        modelPath = modelPath.Replace("{{PILOT_ID}}", id.ToString());
         _session = new InferenceSession(modelPath);
 
         Name = $"Fox4 v{_session.ModelMetadata.Version}";
@@ -82,7 +90,12 @@ public sealed class Fox4
 
         // Inference forward pass
         using var outputs = _session.Run(_runOptions, inputs, [OUTPUT_TENSOR]);
-        var outputsSpan = outputs[0].GetTensorDataAsSpan<float>();
+        var outputsSpan = outputs[0].GetTensorDataAsSpan<float>().ToArray();
+
+        // Apply output randomisation
+        if (_outputRandStd > 0)
+            for (var i = 0; i < outputs.Count; i++)
+                outputsSpan[i] += _random.NextGaussian(mean: 0, dev: _outputRandStd);
 
         // Log tensor data to CSV
         _logDataset?.Log(inputTensor.Buffer.Span, outputsSpan);

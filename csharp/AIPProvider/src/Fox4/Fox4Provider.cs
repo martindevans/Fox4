@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using CommandLine;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using UnityGERunner.UnityApplication;
 
@@ -12,19 +13,29 @@ public class Fox4Provider
     private bool _setup;
     private bool _stopped;
 
+    static Fox4Provider()
+    {
+        // Load onnxruntime.dll from a location relative to the currently executing assembly
+        var assemblyPath = Assembly.GetExecutingAssembly().Location;
+        var onnxRuntimePath = Path.Join(Path.GetDirectoryName(assemblyPath), @"runtimes\win-x64\native", "onnxruntime.dll");
+        NativeLibrary.Load(onnxRuntimePath);
+    }
+
     public override SetupActions Start(SetupInfo info)
     {
-        // Locate the assembly that is cirrently executing
-        var assemblyPath = Assembly.GetExecutingAssembly().Location;
-        Log($"Assembly Path: {assemblyPath}");
-
-        // Load onnxruntime.dll from a known relative path
-        var onnxRuntimePath = Path.Join(Path.GetDirectoryName(assemblyPath), @"runtimes\win-x64\native", "onnxruntime.dll");
-        Log($"Loading onnxruntime: {onnxRuntimePath}");
-        NativeLibrary.Load(onnxRuntimePath);
-
+        // Parse arguments as if they were commandline args
+        var opts = new Options();
+        Parser.Default.ParseArguments<Options>(string.Join(" ", info.args).Split(' '))
+              .WithParsed(o => opts = o)
+              .WithNotParsed(errs =>
+               {
+                   Log("Failed to parse setup args:");
+                   foreach (var error in errs)
+                       Log(error.ToString() ?? "");
+               });
+        
         // Create inner pilot, responsible for running model
-        _pilot = new Fox4(this, info.id, "model.onnx", info.args.Contains("--log-tensors"));
+        _pilot = new Fox4(this, info.id, "model.onnx", opts.LogTensors, opts.OutputRandDev);
 
         // Request a gun and no other equipment
         return new SetupActions
@@ -60,4 +71,13 @@ public class Fox4Provider
 
         return _pilot!.Update(state);
     }
+}
+
+public class Options
+{
+    [Option("log-tensors")]
+    public bool LogTensors { get; set; }
+
+    [Option("output-rand-dev")]
+    public float OutputRandDev { get; set; }
 }

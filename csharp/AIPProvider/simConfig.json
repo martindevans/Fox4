@@ -4,5 +4,5 @@
 	"map": "../../Map/",
 	"debugEnemy": true,
 	"spawnDist": 200,
-	"alliedArgs": [ "--log-tensors" ]
+	"alliedArgs": [ "--log-tensors --output-rand-dev 0.0" ]
 }

@@ -14,6 +14,7 @@
 	</Target>
 
 	<ItemGroup>
+	  <PackageReference Include="CommandLineParser" Version="2.9.1" />
 	  <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.22.1" />
 	  <PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="1.22.2" />
 	</ItemGroup>
