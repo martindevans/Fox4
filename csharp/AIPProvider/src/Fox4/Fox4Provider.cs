@@ -10,6 +10,7 @@ public class Fox4Provider
     private Fox4? _pilot;
 
     private bool _setup;
+    private bool _stopped;
 
     public override SetupActions Start(SetupInfo info)
     {
@@ -35,6 +36,10 @@ public class Fox4Provider
 
     public override void Stop()
     {
+        if (_stopped)
+            return;
+        _stopped = true;
+
         base.Stop();
 
         _pilot?.Dispose();
@@ -42,6 +47,10 @@ public class Fox4Provider
 
     public override InboundState Update(OutboundState state)
     {
+        // Don't do anything after stop is called
+        if (_stopped)
+            return default;
+
         // Skip the very first step of the sim to avoid weird setup issues on the first frame
         if (!_setup)
         {

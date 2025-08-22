@@ -38,13 +38,14 @@ public sealed class DatasetLogger
         builder.AppendJoin(", ", outputTensor);
         _outputs.WriteLine(builder);
 
+        // Stop is not always called by the sim. Flush the buffers after every line to ensure we don't get a broken file.
         _inputs.Flush();
         _outputs.Flush();
     }
 
     public void Dispose()
     {
-        _inputs.Flush();
-        _outputs.Flush();
+        _inputs.Dispose();
+        _outputs.Dispose();
     }
 }
