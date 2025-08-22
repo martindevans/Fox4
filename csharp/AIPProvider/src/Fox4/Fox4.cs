@@ -11,8 +11,12 @@ namespace AIPProvider.Fox4;
 public sealed class Fox4
     : IDisposable
 {
+    private const string INPUT_TENSOR = "input";
+    private const string OUTPUT_TENSOR = "output";
+
     private readonly IAIPProvider _provider;
 
+    private readonly RunOptions _runOptions;
     private readonly InferenceSession _session;
     private readonly IInputTensorBuilder _inputBuilder;
     private readonly IOutputTensorReader _outputReader;
@@ -28,6 +32,7 @@ public sealed class Fox4
     {
         _provider = provider;
 
+        _runOptions = new RunOptions();
         _session = new InferenceSession(modelPath);
 
         Name = $"Fox4 v{_session.ModelMetadata.Version}";
@@ -41,6 +46,7 @@ public sealed class Fox4
 
     public void Dispose()
     {
+        _runOptions.Dispose();
         _session.Dispose();
         _logDataset?.Dispose();
     }
@@ -71,12 +77,11 @@ public sealed class Fox4
         using var inputTensorOrt = OrtValue.CreateTensorValueFromMemory(OrtMemoryInfo.DefaultInstance, inputTensor.Buffer, [ 1, inputTensor.Length ]);
         var inputs = new Dictionary<string, OrtValue>
         {
-            { "input", inputTensorOrt }
+            { INPUT_TENSOR, inputTensorOrt }
         };
 
         // Inference forward pass
-        using var options = new RunOptions();
-        using var outputs = _session.Run(options, inputs, [ "output" ]);
+        using var outputs = _session.Run(_runOptions, inputs, [OUTPUT_TENSOR]);
         var outputsSpan = outputs[0].GetTensorDataAsSpan<float>();
 
         // Log tensor data to CSV
