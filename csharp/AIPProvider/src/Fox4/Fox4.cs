@@ -12,7 +12,6 @@ public sealed class Fox4
     : IDisposable
 {
     private const string INPUT_TENSOR = "input";
-    private const string OUTPUT_TENSOR = "output";
 
     private readonly IAIPProvider _provider;
 
@@ -20,6 +19,7 @@ public sealed class Fox4
     private readonly InferenceSession _session;
     private readonly IInputTensorBuilder _inputBuilder;
     private readonly IOutputTensorReader _outputReader;
+    private readonly IReadOnlyList<string> _outputs;
 
     private float? _previousTime;
     private Vector3? _previousEulerAngles;
@@ -42,6 +42,7 @@ public sealed class Fox4
 
         modelPath = modelPath.Replace("{{PILOT_ID}}", id.ToString());
         _session = new InferenceSession(modelPath);
+        _outputs = _session.OutputNames;
 
         Name = $"Fox4 v{_session.ModelMetadata.CustomMetadataMap.GetValueOrDefault("version", "unknown")}";
 
@@ -89,18 +90,35 @@ public sealed class Fox4
         };
 
         // Inference forward pass
-        using var outputs = _session.Run(_runOptions, inputs, [OUTPUT_TENSOR]);
-        var outputsArr = outputs[0].GetTensorDataAsSpan<float>().ToArray();
+        using var outputs = _session.Run(_runOptions, inputs, _outputs);
 
-        // Apply output randomisation
-        if (_outputRandStd > 0)
-            for (var i = 0; i < outputsArr.Length; i++)
-                outputsArr[i] += _random.NextGaussian(mean: 0, dev: _outputRandStd);
+        // Read outputs
+        var outputsArr = ReadOutputs(outputs, state);
 
         // Log tensor data to CSV
         _logDataset?.Log(inputTensor.Buffer.Span, outputsArr);
 
-        // Read outputs
+        // Convert outputs to game actions
         return _outputReader.Read(outputsArr, state);
+    }
+
+    private float[] ReadOutputs(IDisposableReadOnlyCollection<OrtValue> outputs, OutboundState state)
+    {
+        var outputsArr = outputs[0].GetTensorDataAsSpan<float>().ToArray();
+
+        // Apply output randomisation
+        if (_outputRandStd > 0)
+        {
+            // Try to find a deviation tensor
+            var devTensorIdx = _outputs.IndexOf("output_deviation");
+
+            // Apply noise
+            if (devTensorIdx < 0)
+                outputsArr.AddGaussianNoise(_random, _outputRandStd);
+            else
+                outputsArr.AddGaussianNoise(_random, _outputRandStd, outputs[devTensorIdx]);
+        }
+
+        return outputsArr;
     }
 }
