@@ -31,7 +31,7 @@ public sealed class Fox4
 
     public string Name { get; }
 
-    public Fox4(IAIPProvider provider, int id, string modelPath, bool logDataset, float outputRandStd)
+    public Fox4(IAIPProvider provider, int id, string modelPath, bool logDataset, float outputRandStd, string runid)
     {
         _provider = provider;
 
@@ -50,7 +50,7 @@ public sealed class Fox4
         _outputReader = OutputTensorReaderFactory.Get(_session.ModelMetadata.CustomMetadataMap.GetValueOrDefault("output_tensor_version") ?? "v1");
 
         if (logDataset)
-            _logDataset = DatasetLogger.Create(id, _inputBuilder, _outputReader);
+            _logDataset = DatasetLogger.Create($"{id}{runid}", _inputBuilder, _outputReader);
     }
 
     public void Dispose()

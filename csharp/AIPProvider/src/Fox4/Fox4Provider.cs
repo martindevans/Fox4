@@ -35,7 +35,7 @@ public class Fox4Provider
                });
         
         // Create inner pilot, responsible for running model
-        _pilot = new Fox4(this, info.id, "model.onnx", opts.LogTensors, opts.OutputRandDev);
+        _pilot = new Fox4(this, info.id, "model.onnx", opts.LogTensors, opts.OutputRandDev, opts.RunId);
 
         // Request a gun and no other equipment
         return new SetupActions
@@ -62,7 +62,7 @@ public class Fox4Provider
         if (_stopped)
             return default;
 
-        // Skip the very first step of the sim to avoid weird setup issues on the first frame
+        // Skip the very first step of the sim to avoid weird issues on the first frame
         if (!_setup)
         {
             _setup = true;
@@ -79,5 +79,8 @@ public class Options
     public bool LogTensors { get; set; }
 
     [Option("output-rand-dev")]
-    public float OutputRandDev { get; set; }
+    public float OutputRandDev { get; set; } = 0;
+
+    [Option("runid")]
+    public string RunId { get; set; } = "";
 }
