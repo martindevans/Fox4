@@ -3,7 +3,6 @@ using AIPProvider.Fox4.ONNX.Tensors;
 using AIPProvider.Fox4.ONNX.Tensors.Input;
 using AIPProvider.Fox4.ONNX.Tensors.Output;
 using Microsoft.ML.OnnxRuntime;
-using System.Numerics;
 using UnityGERunner.UnityApplication;
 
 namespace AIPProvider.Fox4;
@@ -22,7 +21,7 @@ public sealed class Fox4
     private readonly IReadOnlyList<string> _outputs;
 
     private float? _previousTime;
-    private Vector3? _previousEulerAngles;
+    private readonly AngleRateCalculator _angleRates = new();
 
     private readonly DatasetLogger? _logDataset;
 
@@ -41,6 +40,7 @@ public sealed class Fox4
         _runOptions = new RunOptions();
 
         modelPath = modelPath.Replace("{{PILOT_ID}}", id.ToString());
+
         _session = new InferenceSession(modelPath);
         _outputs = _session.OutputNames;
 
@@ -69,17 +69,7 @@ public sealed class Fox4
         _previousTime = state.time;
 
         // Calculate change in euler angle since last frame
-        var euler = state.kinematics.rotation.quat.eulerAngles.To();
-        var angleRate = Vector3.Zero;
-        if (!_previousEulerAngles.HasValue || dt == 0)
-        {
-            _previousEulerAngles = euler;
-        }
-        else
-        {
-            var deltaAngle = _previousEulerAngles.Value - euler;
-            angleRate = deltaAngle / dt;
-        }
+        var angleRate = _angleRates.Update(state.kinematics.rotation, dt);
 
         // Build inputs
         var inputTensor = _inputBuilder.Build(ref state, angleRate, Map.instance);
@@ -118,6 +108,11 @@ public sealed class Fox4
             else
                 outputsArr.AddGaussianNoise(_random, _outputRandStd, outputs[devTensorIdx]);
         }
+
+        // Clamp all output tensor values into valid range. Doing this before logging ensures the tensor log
+        // contains the true value actually applied to the sim.
+        foreach (ref var value in outputsArr.AsSpan())
+            value = Math.Clamp(value, -1, 1);
 
         return outputsArr;
     }

@@ -20,11 +20,16 @@ public class InputTensorV2
         "right.x", "right.y", "right.z",
         "up.x", "up.y", "up.z",
 
+        "pitch",
+        "yaw",
+        "roll",
+
         "pitch_rate",
         "yaw_rate",
         "roll_rate",
 
         "altitude",
+        "radar_altitude",
 
         "speed",
         "dir.x", "dir.y", "dir.z",
@@ -34,11 +39,21 @@ public class InputTensorV2
     {
         var speed = state.kinematics.velocity.vec3.magnitude;
         var dir = state.kinematics.velocity.vec3 / Math.Max(0.001f, speed);
+        var radar_altitude = state.kinematics.position.y - map.GetHeightAtSubpoint(state.kinematics.position);
+        var euler_angles = state.kinematics.rotation.quat.eulerAngles;
 
         float[] data =
         [
+            // Rotation frame of reference
+            //..state.kinematics.rotation.EncodeFrameOfReference(),
+            0,0,0,
+            0,0,0,
+            0,0,0,
+
             // Rotation
-            ..state.kinematics.rotation.EncodeFrameOfReference(),
+            euler_angles.x / 360,
+            euler_angles.y / 360,
+            euler_angles.z / 360,
 
             // Rotation rate
             angleRate.X / PITCH_RATE_NORM,
@@ -47,6 +62,7 @@ public class InputTensorV2
 
             // Altitude
             state.kinematics.position.y / ALT_NORM,
+            radar_altitude / ALT_NORM,
 
             // Speed & Direction (world space)
             speed / SPEED_NORM,
