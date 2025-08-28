@@ -20,22 +20,22 @@ public sealed class Fox4
     private readonly IOutputTensorReader _outputReader;
     private readonly IReadOnlyList<string> _outputs;
 
-    private float? _previousTime;
-    private readonly AngleRateCalculator _angleRates = new();
-
     private readonly DatasetLogger? _logDataset;
 
     private readonly Random _random;
     private readonly float _outputRandStd;
+    private readonly float _outputSmoothing;
+    private readonly float[] _prevOutputsArr;
 
     public string Name { get; }
 
-    public Fox4(IAIPProvider provider, int id, string modelPath, bool logDataset, float outputRandStd, string runid)
+    public Fox4(IAIPProvider provider, int id, string modelPath, bool logDataset, float outputRandStd, string runid, float outputSmoothing)
     {
         _provider = provider;
 
         _random = new Random(id * 3452346 + (int)DateTime.UtcNow.Ticks);
         _outputRandStd = outputRandStd;
+        _outputSmoothing = outputSmoothing;
 
         _runOptions = new RunOptions();
 
@@ -49,6 +49,9 @@ public sealed class Fox4
         _inputBuilder = InputTensorBuilderFactory.Get(_session.ModelMetadata.CustomMetadataMap.GetValueOrDefault("input_tensor_version") ?? "v1");
         _outputReader = OutputTensorReaderFactory.Get(_session.ModelMetadata.CustomMetadataMap.GetValueOrDefault("output_tensor_version") ?? "v1");
 
+        var outputs = _outputReader.Columns.Count;
+        _prevOutputsArr = new float[outputs];
+
         if (logDataset)
             _logDataset = DatasetLogger.Create($"{id}{runid}", _inputBuilder, _outputReader);
     }
@@ -60,19 +63,10 @@ public sealed class Fox4
         _logDataset?.Dispose();
     }
 
-    public InboundState Update(OutboundState state)
+    public InboundState Update(GameState state)
     {
-        // Calculate delta time
-        if (!_previousTime.HasValue)
-            _previousTime = state.time;
-        var dt = state.time - _previousTime.Value;
-        _previousTime = state.time;
-
-        // Calculate change in euler angle since last frame
-        var angleRate = _angleRates.Update(state.kinematics.rotation, dt);
-
         // Build inputs
-        var inputTensor = _inputBuilder.Build(ref state, angleRate, Map.instance);
+        var inputTensor = _inputBuilder.Build(state, Map.instance);
         using var inputTensorOrt = OrtValue.CreateTensorValueFromMemory(OrtMemoryInfo.DefaultInstance, inputTensor.Buffer, [ 1, inputTensor.Length ]);
         var inputs = new Dictionary<string, OrtValue>
         {
@@ -83,7 +77,7 @@ public sealed class Fox4
         using var outputs = _session.Run(_runOptions, inputs, _outputs);
 
         // Read outputs
-        var outputsArr = ReadOutputs(outputs, state);
+        var outputsArr = ReadOutputs(outputs);
 
         // Log tensor data to CSV
         _logDataset?.Log(inputTensor.Buffer.Span, outputsArr);
@@ -92,7 +86,7 @@ public sealed class Fox4
         return _outputReader.Read(outputsArr, state);
     }
 
-    private float[] ReadOutputs(IDisposableReadOnlyCollection<OrtValue> outputs, OutboundState state)
+    private float[] ReadOutputs(IDisposableReadOnlyCollection<OrtValue> outputs)
     {
         var outputsArr = outputs[0].GetTensorDataAsSpan<float>().ToArray();
 
@@ -109,10 +103,13 @@ public sealed class Fox4
                 outputsArr.AddGaussianNoise(_random, _outputRandStd, outputs[devTensorIdx]);
         }
 
-        // Clamp all output tensor values into valid range. Doing this before logging ensures the tensor log
-        // contains the true value actually applied to the sim.
-        foreach (ref var value in outputsArr.AsSpan())
-            value = Math.Clamp(value, -1, 1);
+        // Apply smoothing by blending in the last outputs
+        if (_outputSmoothing > 0)
+            for (var i = 0; i < outputsArr.Length; i++)
+                outputsArr[i] = outputsArr[i] * (1 - _outputSmoothing) + _prevOutputsArr[i] * _outputSmoothing;
+
+        // Copy outputs to prev outputs
+        Array.Copy(outputsArr, _prevOutputsArr, outputsArr.Length);
 
         return outputsArr;
     }

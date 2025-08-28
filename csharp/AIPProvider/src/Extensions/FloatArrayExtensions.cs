@@ -7,7 +7,7 @@ public static class FloatArrayExtensions
     public static void AddGaussianNoise(this float[] arr, Random rng, float dev)
     {
         for (var i = 0; i < arr.Length; i++)
-            arr[i] += rng.NextGaussian(mean: 0, dev: dev);
+            arr[i] += (float)rng.SampleGaussian(0, dev);
     }
 
     public static void AddGaussianNoise(this float[] arr, Random rng, float stdGain, OrtValue deviations)
@@ -15,6 +15,6 @@ public static class FloatArrayExtensions
         var deviationsSpan = deviations.GetTensorDataAsSpan<float>();
 
         for (var i = 0; i < arr.Length; i++)
-            arr[i] += rng.NextGaussian(mean: 0, dev: stdGain * deviationsSpan[i]);
+            arr[i] += (float)rng.SampleGaussian(0, stdGain * deviationsSpan[i]);
     }
 }

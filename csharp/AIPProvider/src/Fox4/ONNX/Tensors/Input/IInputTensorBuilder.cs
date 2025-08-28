@@ -1,5 +1,4 @@
-﻿using System.Numerics;
-using Microsoft.ML.OnnxRuntime.Tensors;
+﻿using Microsoft.ML.OnnxRuntime.Tensors;
 using UnityGERunner.UnityApplication;
 
 namespace AIPProvider.Fox4.ONNX.Tensors.Input;
@@ -8,7 +7,7 @@ public interface IInputTensorBuilder
 {
     IReadOnlyList<string> Columns { get; }
 
-    DenseTensor<float> Build(ref OutboundState state, Vector3 angleRate, Map map);
+    DenseTensor<float> Build(GameState state, Map map);
 }
 
 public static class InputTensorBuilderFactory
@@ -19,6 +18,7 @@ public static class InputTensorBuilderFactory
         {
             "v1" => new InputTensorV1(),
             "v2" => new InputTensorV2(),
+            "v3" => new InputTensorV3(),
 
             _ => throw new ArgumentException($"Unknown input tensor type: {version}")
         };
