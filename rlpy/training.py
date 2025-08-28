@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 class PPOParameters():
     def __init__(self, gamma = 0.99, gae_lambda = 0.95, n_epochs = 8, batch_size = 128, learning_rate = 5e-5, clip_range = 0.1, value_coeff = 0.4, entropy_coeff = 0.01, large_entropy_coeff = 0.01):
-        """Hyperpaeameters for PPO training.
+        """Hyperparameters for PPO training.
 
         @param: gamma Discount factor for future rewards
         @param: gae_lambda Lambda for Generalized Advantage Estimation

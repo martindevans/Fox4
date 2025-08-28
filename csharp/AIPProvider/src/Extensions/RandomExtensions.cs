@@ -55,7 +55,7 @@ public static class RandomExtensions
     /// <returns></returns>
     public static double SampleNormal(this Random random)
     {
-        return random.SampleBeta(0, 1);
+        return random.SampleGaussian(0, 1);
     }
 
     /// <summary>
