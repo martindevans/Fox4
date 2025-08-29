@@ -4,6 +4,6 @@
 	"map": "../../Map/",
 	"debugEnemy": true,
 	"spawnDist": 200,
-	"alliedArgs": [ "--log-tensors --output-rand-dev 1.0 --output-smoothing 0.25" ],
-	"enemyArgs": [ "--log-tensors --output-rand-dev 1.0 --output-smoothing 0.25" ]
+	"alliedArgs": [ "--log-tensors --output-rand-dev 1.0" ],
+	"enemyArgs": [ "--log-tensors --output-rand-dev 1.0" ]
 }
