@@ -9,3 +9,8 @@ csharp/HeadlessClient
 csharp/Map
 csharp/AIPProvider/sim
 python/venv
+rlpy/venv
+rlpy/test_run
+rlpy/training
+rlpy/v2-run
+rlpy/long_run_1
