@@ -33,9 +33,15 @@ class PPOParameters():
         self.large_entropy_coeff = large_entropy_coeff
 
     def mutate(self, stddev):
-        obj = copy.copy(self)
+        """
+        Create a mutated copy of this PPOParameters object by applying multiplicative Gaussian noise to each hyperparameter.
 
-        obj.gamma *= random.gauss(1, stddev)
+        @param: stddev Standard deviation of the Gaussian noise used for mutation. Each parameter is multiplied by a random value drawn from N(1, stddev).
+        @return: A new PPOParameters object with mutated hyperparameters. Each parameter is clipped to a valid range after mutation.
+
+        The mutation is performed by multiplying each parameter by a random value drawn from a normal distribution with mean 1 and standard deviation `stddev`, then clipping the result to a predefined valid range for each parameter.
+        """
+        obj = copy.copy(self)
         obj.gamma  = np.clip(obj.gamma, 0.75, 1)
 
         obj.gae_lambda *= random.gauss(1, stddev)
