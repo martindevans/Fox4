@@ -4,9 +4,12 @@ from pathlib import Path
 import os
 from torch.utils.data import TensorDataset, DataLoader
 from tqdm import tqdm
+import copy
+import random
+import numpy as np
 
 class PPOParameters():
-    def __init__(self, gamma = 0.99, gae_lambda = 0.95, n_epochs = 10, batch_size = 128, learning_rate = 1e-4, clip_range = 0.15, value_coeff = 0.4, entropy_coeff = 0.005, large_entropy_coeff = 0.0):
+    def __init__(self, gamma = 0.99, gae_lambda = 0.95, n_epochs = 10, batch_size = 128, learning_rate = 0.0001, clip_range = 0.15, value_coeff = 0.4, entropy_coeff = 0.005, large_entropy_coeff = 0.0):
         """Hyperparameters for PPO training.
 
         @param: gamma Discount factor for future rewards
@@ -29,12 +32,36 @@ class PPOParameters():
         self.entropy_coeff = entropy_coeff
         self.large_entropy_coeff = large_entropy_coeff
 
+    def mutate(self, stddev):
+        obj = copy.copy(self)
+
+        obj.gamma *= random.gauss(0, stddev)
+        obj.gamma  = np.clip(obj.gamma, 0.75, 1)
+
+        obj.gae_lambda *= random.gauss(0, stddev)
+        obj.gae_lambda  = np.clip(obj.gamma, 0.75, 1)
+
+        obj.learning_rate *= random.gauss(0, stddev)
+        obj.learning_rate  = np.clip(obj.learning_rate, 1e-6, 1e-3)
+
+        obj.clip_range *= random.gauss(0, stddev)
+        obj.clip_range  = np.clip(obj.clip_range, 0.1, 0.3)
+
+        obj.value_coeff *= random.gauss(0, stddev)
+        obj.value_coeff  = np.clip(obj.value_coeff, 0.1, 0.7)
+
+        obj.entropy_coeff *= random.gauss(0, stddev)
+        obj.entropy_coeff  = np.clip(obj.entropy_coeff, 0.001, 0.1)
+
+        obj.large_entropy_coeff *= random.gauss(0, stddev)
+        obj.large_entropy_coeff  = np.clip(obj.large_entropy_coeff, 0.0, 0.1)
+
 def load_datasets(generation_path, sim_count):
     """Load CSVs from sim folders into one big dataset"""
 
-    all_inputs = []
+    all_inputs  = []
     all_outputs = []
-    all_extras = []
+    all_extras  = []
     root = Path(generation_path)
 
     for i in range(sim_count):
