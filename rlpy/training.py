@@ -6,7 +6,7 @@ from torch.utils.data import TensorDataset, DataLoader
 from tqdm import tqdm
 
 class PPOParameters():
-    def __init__(self, gamma = 0.99, gae_lambda = 0.95, n_epochs = 8, batch_size = 128, learning_rate = 5e-5, clip_range = 0.1, value_coeff = 0.4, entropy_coeff = 0.01, large_entropy_coeff = 0.01):
+    def __init__(self, gamma = 0.99, gae_lambda = 0.95, n_epochs = 10, batch_size = 128, learning_rate = 1e-4, clip_range = 0.15, value_coeff = 0.4, entropy_coeff = 0.005, large_entropy_coeff = 0.0):
         """Hyperparameters for PPO training.
 
         @param: gamma Discount factor for future rewards
@@ -169,7 +169,7 @@ def train(model, dataset_in: pd.DataFrame, dataset_out: pd.DataFrame, dataset_ex
             optimizer.zero_grad()
             loss.backward()
 
-            # Gradient clipping can also help with stability
+            # Gradient clipping can help with stability
             torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=0.5)
 
             optimizer.step()

@@ -24,18 +24,16 @@ public sealed class Fox4
 
     private readonly Random _random;
     private readonly float _outputRandStd;
-    private readonly float _outputSmoothing;
     private readonly float[] _prevOutputsArr;
 
     public string Name { get; }
 
-    public Fox4(IAIPProvider provider, int id, string modelPath, bool logDataset, float outputRandStd, string runid, float outputSmoothing)
+    public Fox4(IAIPProvider provider, int id, string modelPath, bool logDataset, float outputRandStd, string runid)
     {
         _provider = provider;
 
         _random = new Random(id * 3452346 + (int)DateTime.UtcNow.Ticks);
         _outputRandStd = outputRandStd;
-        _outputSmoothing = outputSmoothing;
 
         _runOptions = new RunOptions();
 
@@ -102,11 +100,6 @@ public sealed class Fox4
             else
                 outputsArr.AddGaussianNoise(_random, _outputRandStd, outputs[devTensorIdx]);
         }
-
-        // Apply smoothing by blending in the last outputs
-        if (_outputSmoothing > 0)
-            for (var i = 0; i < outputsArr.Length; i++)
-                outputsArr[i] = outputsArr[i] * (1 - _outputSmoothing) + _prevOutputsArr[i] * _outputSmoothing;
 
         // Copy outputs to prev outputs
         Array.Copy(outputsArr, _prevOutputsArr, outputsArr.Length);

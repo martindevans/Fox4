@@ -6,6 +6,11 @@ from typing import Tuple
 from torch.distributions import Normal
 from architecture.ResidualBlock import ResidualBlock
 
+# A good practice to prevent the stddev from becoming too large or too small,
+# which can cause numerical instability.
+LOG_STD_MAX = 2
+LOG_STD_MIN = -20
+
 class Fox4RLNetwork(nn.Module):
     """Neural network for Fox4."""
 
@@ -24,7 +29,7 @@ class Fox4RLNetwork(nn.Module):
             shared_layers.append(
                 ResidualBlock([
                     nn.Linear(prev_size, hidden_size),
-                    nn.CELU()
+                    nn.SiLU()
                 ])
             )
             prev_size = hidden_size
@@ -45,11 +50,11 @@ class Fox4RLNetwork(nn.Module):
         self.critic_head = nn.Sequential(
             ResidualBlock([
                 nn.Linear(last_shared_size, last_shared_size),
-                nn.CELU()
+                nn.SiLU()
             ]),
             ResidualBlock([
                 nn.Linear(last_shared_size, last_shared_size),
-                nn.CELU()
+                nn.SiLU()
             ]),
             nn.Linear(last_shared_size, 1)
         )
@@ -58,14 +63,24 @@ class Fox4RLNetwork(nn.Module):
         # PPO needs to explore by sampling actions from a distribution. We need
         # to define the standard deviation of that distribution. This is a
         # learnable parameter, so the agent can learn how much to explore.
-        # Initialised to a small value, so initial stddev is small
-        self.action_log_std = nn.Parameter(torch.full((1, self.action_size), -0.25))
+        self.action_log_std = nn.Sequential(
+            ResidualBlock([
+                nn.Linear(last_shared_size, last_shared_size),
+                nn.SiLU()
+            ]),
+            nn.Linear(last_shared_size, self.action_size)
+        )
 
         # Init model
         self.apply(self.init_weights)
         
         # Override init for actor head to have a very small gain
         torch.nn.init.orthogonal_(self.actor_head[0].weight, gain=0.01)
+
+        # Get the last layer of the log_std head, init weights to be small and biases to zero
+        last_layer = self.action_log_std[-1]
+        torch.nn.init.orthogonal_(last_layer.weight, gain=0.01)
+        torch.nn.init.constant_(last_layer.bias, 0)
     
     def init_weights(self, module):
         """Initialize network weights. Orthogonal initialization is common for PPO."""
@@ -90,7 +105,9 @@ class Fox4RLNetwork(nn.Module):
         action_mean = self.actor_head(shared_features)
         
         # Create the action probability distribution
-        action_std = torch.exp(self.action_log_std)
+        action_std_log = self.action_log_std(shared_features)
+        action_std_log = torch.clamp(action_std_log, min=LOG_STD_MIN, max=LOG_STD_MAX)
+        action_std = torch.exp(action_std_log)
         distribution = Normal(action_mean, action_std)
 
         return (value.flatten(), distribution)
@@ -136,10 +153,7 @@ class OnnxExportableModel(nn.Module):
         # We need the parts of the model that produce the action mean
         self.shared_net = main_model.shared_net
         self.actor_head = main_model.actor_head
-        
-        # We also need the learnable log_std parameter
-        # We register it here so it becomes part of this module's state
-        self.register_parameter("action_log_std", main_model.action_log_std)
+        self.action_log_std = main_model.action_log_std
 
     def forward(self, x: torch.Tensor):
         # Calculate the mean
@@ -148,7 +162,9 @@ class OnnxExportableModel(nn.Module):
         
         # Calculate the standard deviation
         # torch.exp is the inverse of log, recovering the std
-        action_std = torch.exp(self.action_log_std)
+        action_log_std = self.action_log_std(shared_features)
+        action_log_std = torch.clamp(action_log_std, min=LOG_STD_MIN, max=LOG_STD_MAX)
+        action_std = torch.exp(action_log_std)
         
         # The standard deviation is currently shape (1, 6). We need to
         # expand it to match the batch size of the input for the ONNX graph.
