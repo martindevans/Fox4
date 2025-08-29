@@ -56,6 +56,8 @@ class PPOParameters():
         obj.large_entropy_coeff *= random.gauss(1, stddev)
         obj.large_entropy_coeff  = np.clip(obj.large_entropy_coeff, 0.0, 0.1)
 
+        return obj
+
 def load_datasets(generation_path, sim_count):
     """Load CSVs from sim folders into one big dataset"""
 
