@@ -38,29 +38,25 @@ class PPOParameters():
 
         @param: stddev Standard deviation of the Gaussian noise used for mutation. Each parameter is multiplied by a random value drawn from N(1, stddev).
         @return: A new PPOParameters object with mutated hyperparameters. Each parameter is clipped to a valid range after mutation.
-
-        The mutation is performed by multiplying each parameter by a random value drawn from a normal distribution with mean 1 and standard deviation `stddev`, then clipping the result to a predefined valid range for each parameter.
         """
+        # List of (attribute, min, max) for mutation
+        param_defs = [
+            ("gamma", 0.75, 1),
+            ("gae_lambda", 0.75, 1),
+            ("learning_rate", 1e-6, 1e-3),
+            ("clip_range", 0.1, 0.3),
+            ("value_coeff", 0.1, 0.7),
+            ("entropy_coeff", 0.001, 0.1),
+            ("large_entropy_coeff", 0.0, 0.1),
+        ]
+
+        # Apply mutation to a copy of self
         obj = copy.copy(self)
-        obj.gamma  = np.clip(obj.gamma, 0.75, 1)
-
-        obj.gae_lambda *= random.gauss(1, stddev)
-        obj.gae_lambda  = np.clip(obj.gae_lambda, 0.75, 1)
-
-        obj.learning_rate *= random.gauss(1, stddev)
-        obj.learning_rate  = np.clip(obj.learning_rate, 1e-6, 1e-3)
-
-        obj.clip_range *= random.gauss(1, stddev)
-        obj.clip_range  = np.clip(obj.clip_range, 0.1, 0.3)
-
-        obj.value_coeff *= random.gauss(1, stddev)
-        obj.value_coeff  = np.clip(obj.value_coeff, 0.1, 0.7)
-
-        obj.entropy_coeff *= random.gauss(1, stddev)
-        obj.entropy_coeff  = np.clip(obj.entropy_coeff, 0.001, 0.1)
-
-        obj.large_entropy_coeff *= random.gauss(1, stddev)
-        obj.large_entropy_coeff  = np.clip(obj.large_entropy_coeff, 0.0, 0.1)
+        for attr, min_val, max_val in param_defs:
+            val = getattr(obj, attr)
+            val *= random.gauss(1, stddev)
+            val = np.clip(val, min_val, max_val)
+            setattr(obj, attr, val)
 
         return obj
 
