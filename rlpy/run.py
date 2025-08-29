@@ -53,8 +53,8 @@ def run_sims(path, count, parallel):
                 "noMap": True,
                 "debugEnemy": True,
                 "spawnDist": 0,
-                "alliedArgs": [ f"--log-tensors --output-rand-dev 1 --output-smoothing 0.125 --runid {str(uuid.uuid4())}" ],
-                "enemyArgs": [ f"--log-tensors --output-rand-dev 1 --output-smoothing 0.125 --runid {str(uuid.uuid4())}" ]
+                "alliedArgs": [ f"--log-tensors --output-rand-dev 1 --output-smoothing 0.0 --runid {str(uuid.uuid4())}" ],
+                "enemyArgs": [ f"--log-tensors --output-rand-dev 1 --output-smoothing 0.0 --runid {str(uuid.uuid4())}" ]
             }, indent=2))
         
         # Copy model into folder
@@ -88,17 +88,19 @@ def run_sims(path, count, parallel):
             if f.endswith(".onnx"):
                 os.remove(os.path.join(dirpath, f))
 
-    # Load the version of the model we just generated data with
-    model = Fox4RLNetwork()
-    model.load_state_dict(torch.load(os.path.join(path, "model.pth")))
-    model.to(device)
-    print(f" - Using device: {device}")
-
     # Postprocessing datasets
     for i in tqdm(range(0, count), desc="Postprocessing Dataset", leave=False):
         sim_folder = os.path.abspath(os.path.join(path, f"sim_{i}"))
 
         for in_file in glob.glob(os.path.join(sim_folder, "input_tensors*")):
+
+            # Load the version of the model we just generated data with
+            # Do this again for every file, in case the model is stateful (e.g. recurrent layers)
+            model = Fox4RLNetwork()
+            model.load_state_dict(torch.load(os.path.join(path, "model.pth")))
+            model.to(device)
+            model.eval()
+
             df_input = pd.read_csv(in_file)
 
             out_file = in_file.replace("input_", "output_")
@@ -149,7 +151,7 @@ def find_max_generation():
     return (1, "path")
 
 def train_loop(path, generations, start_gen, sim_count, sim_parallel):
-    print(f"♻️ Beginning training loop")
+    print(f"♻️  Beginning training loop")
 
     # Create training folder
     if not os.path.exists(path):
@@ -160,7 +162,11 @@ def train_loop(path, generations, start_gen, sim_count, sim_parallel):
         margs.path = os.path.join(path, "generations", "0", "model.onnx")
         create_model(margs)
 
+    gen_idx = 0
     for gen in range(start_gen, start_gen + generations):
+        gen_idx += 1
+        print(f"Starting Generation: {gen_idx}/{generations}")
+
         # Execute simulations in sub folders
         generation_dir = os.path.join(path, "generations", str(gen))
         run_sims(generation_dir, sim_count, sim_parallel)
@@ -174,9 +180,11 @@ def train_loop(path, generations, start_gen, sim_count, sim_parallel):
         model.load_state_dict(torch.load(os.path.join(generation_dir, "model.pth")))
         model.to(device)
 
-        # Do training
+        # Do training and save it to the folder under a new name
         ((model2, losses, entropies), avg_reward) = training.train(model, df_in, df_out, df_extra, PPOParameters, device)
         model2.save(os.path.join(generation_dir, "trained.onnx"))
+
+        # Write out training stats
         with open(os.path.join(path, f"loss_log.csv"), mode="a") as f:
             for _, ((vl, pl), en) in enumerate(zip(losses, entropies)):
                 f.write(f"{vl},{pl},{en}\n")

@@ -37,7 +37,7 @@ public class Fox4Provider
                });
         
         // Create inner pilot, responsible for running model
-        _pilot = new Fox4(this, info.id, "model.onnx", opts.LogTensors, opts.OutputRandDev, opts.RunId, opts.OutputSmoothing);
+        _pilot = new Fox4(this, info.id, "model.onnx", opts.LogTensors, opts.OutputRandDev, opts.RunId);
 
         // Request a gun and no other equipment
         return new SetupActions
@@ -92,9 +92,6 @@ public class Options
 
     [Option("output-rand-dev")]
     public float OutputRandDev { get; set; } = 0;
-
-    [Option("output-smoothing")]
-    public float OutputSmoothing { get; set; } = 0;
 
     [Option("runid")]
     public string RunId { get; set; } = "";
