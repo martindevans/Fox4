@@ -35,25 +35,25 @@ class PPOParameters():
     def mutate(self, stddev):
         obj = copy.copy(self)
 
-        obj.gamma *= random.gauss(0, stddev)
+        obj.gamma *= random.gauss(1, stddev)
         obj.gamma  = np.clip(obj.gamma, 0.75, 1)
 
-        obj.gae_lambda *= random.gauss(0, stddev)
-        obj.gae_lambda  = np.clip(obj.gamma, 0.75, 1)
+        obj.gae_lambda *= random.gauss(1, stddev)
+        obj.gae_lambda  = np.clip(obj.gae_lambda, 0.75, 1)
 
-        obj.learning_rate *= random.gauss(0, stddev)
+        obj.learning_rate *= random.gauss(1, stddev)
         obj.learning_rate  = np.clip(obj.learning_rate, 1e-6, 1e-3)
 
-        obj.clip_range *= random.gauss(0, stddev)
+        obj.clip_range *= random.gauss(1, stddev)
         obj.clip_range  = np.clip(obj.clip_range, 0.1, 0.3)
 
-        obj.value_coeff *= random.gauss(0, stddev)
+        obj.value_coeff *= random.gauss(1, stddev)
         obj.value_coeff  = np.clip(obj.value_coeff, 0.1, 0.7)
 
-        obj.entropy_coeff *= random.gauss(0, stddev)
+        obj.entropy_coeff *= random.gauss(1, stddev)
         obj.entropy_coeff  = np.clip(obj.entropy_coeff, 0.001, 0.1)
 
-        obj.large_entropy_coeff *= random.gauss(0, stddev)
+        obj.large_entropy_coeff *= random.gauss(1, stddev)
         obj.large_entropy_coeff  = np.clip(obj.large_entropy_coeff, 0.0, 0.1)
 
 def load_datasets(generation_path, sim_count):
