@@ -7,6 +7,7 @@ from tqdm import tqdm
 import copy
 import random
 import numpy as np
+import json
 
 class PPOParameters():
     def __init__(self, gamma = 0.99, gae_lambda = 0.95, n_epochs = 10, batch_size = 128, learning_rate = 0.0001, clip_range = 0.15, value_coeff = 0.4, entropy_coeff = 0.005, large_entropy_coeff = 0.0):
@@ -32,13 +33,14 @@ class PPOParameters():
         self.entropy_coeff = entropy_coeff
         self.large_entropy_coeff = large_entropy_coeff
 
-    def mutate(self, stddev):
+    def mutate(self, stddev, seed=None):
         """
         Create a mutated copy of this PPOParameters object by applying multiplicative Gaussian noise to each hyperparameter.
 
         @param: stddev Standard deviation of the Gaussian noise used for mutation. Each parameter is multiplied by a random value drawn from N(1, stddev).
         @return: A new PPOParameters object with mutated hyperparameters. Each parameter is clipped to a valid range after mutation.
         """
+
         # List of (attribute, min, max) for mutation
         param_defs = [
             ("gamma", 0.75, 1),
@@ -52,13 +54,21 @@ class PPOParameters():
 
         # Apply mutation to a copy of self
         obj = copy.copy(self)
+        rng = np.random.RandomState(seed or random.randint(0, 1000000))
         for attr, min_val, max_val in param_defs:
             val = getattr(obj, attr)
-            val *= random.gauss(1, stddev)
+            fac = rng.normal(1, stddev)
+            val *= fac
             val = np.clip(val, min_val, max_val)
             setattr(obj, attr, val)
 
         return obj
+    
+    def to_json(self):
+        return json.dumps(self.__dict__)
+    
+    def from_json(string):
+        return PPOParameters(**json.loads(string))
 
 def load_datasets(generation_path, sim_count):
     """Load CSVs from sim folders into one big dataset"""
