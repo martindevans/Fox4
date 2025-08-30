@@ -7,7 +7,7 @@ public interface IInputTensorBuilder
 {
     IReadOnlyList<string> Columns { get; }
 
-    DenseTensor<float> Build(GameState state, Map map);
+    DenseTensor<float> Build(AircraftState state, Map map);
 }
 
 public static class InputTensorBuilderFactory

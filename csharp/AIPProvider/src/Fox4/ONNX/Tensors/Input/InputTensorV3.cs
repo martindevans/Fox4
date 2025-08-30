@@ -42,12 +42,12 @@ public class InputTensorV3
         "prev_throttle_in",
     ];
 
-    public DenseTensor<float> Build(GameState state, Map map)
+    public DenseTensor<float> Build(AircraftState state, Map map)
     {
         var speed = state.Speed;
         var localDir = state.LocalVelocity / speed;
 
-        var localGrav = Vector3.Transform(new Vector3(0, -1f, 0), Quaternion.Inverse(state.Rotation));
+        var localGrav = Vector3.Transform(new Vector3(0, -1f, 0), Quaternion.Inverse(state.Orientation));
 
         var radarAltitude = map.GetRadarAltitude(state.WorldPosition);
 

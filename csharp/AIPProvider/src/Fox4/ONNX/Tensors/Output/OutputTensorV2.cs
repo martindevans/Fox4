@@ -2,7 +2,7 @@
 
 namespace AIPProvider.Fox4.ONNX.Tensors.Output;
 
-public class OutputTensorV2
+public class OutputTensorV2(bool _trigger)
     : IOutputTensorReader
 {
     /// <summary>
@@ -21,14 +21,14 @@ public class OutputTensorV2
         "roll",
     ];
 
-    public InboundState Read(ReadOnlySpan<float> tensor, GameState state)
+    public InboundState Read(ReadOnlySpan<float> tensor, AircraftState state)
     {
-        var builder = new ActionsBuilder(state.RawGameState);
+        var builder = new ActionsBuilder(state);
 
-        //// Gun trigger
-        //var trigger = tensor[0] > 0;
-        //if (trigger)
-        //    builder.TryFire(WeaponType.Guns);
+        // Gun trigger
+        var trigger = tensor[0] > 0;
+        if (_trigger && trigger)
+            builder.TryFire(WeaponType.Guns);
 
         // Delta throttle control
         var throttle = Math.Clamp(state.PreviousOutputs.throttle + tensor[1] * 2 * state.DeltaTime, 0, 1);

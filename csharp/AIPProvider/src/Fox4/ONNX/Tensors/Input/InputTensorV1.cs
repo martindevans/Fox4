@@ -46,7 +46,7 @@ public class InputTensorV1
         "potential_energy",
     ];
 
-    public DenseTensor<float> Build(GameState state, Map map)
+    public DenseTensor<float> Build(AircraftState state, Map map)
     {
         throw new NotImplementedException("todo: fix v1 tensor");
 

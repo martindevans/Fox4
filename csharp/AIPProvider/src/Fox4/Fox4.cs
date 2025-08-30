@@ -61,7 +61,7 @@ public sealed class Fox4
         _logDataset?.Dispose();
     }
 
-    public InboundState Update(GameState state)
+    public InboundState Update(AircraftState state)
     {
         // Build inputs
         var inputTensor = _inputBuilder.Build(state, Map.instance);

@@ -35,7 +35,7 @@ public class InputTensorV2
         "prev_roll_in",
     ];
 
-    public DenseTensor<float> Build(GameState state, Map map)
+    public DenseTensor<float> Build(AircraftState state, Map map)
     {
         var speed = state.Speed;
         var localDir = state.LocalVelocity / speed;

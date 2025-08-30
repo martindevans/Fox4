@@ -19,9 +19,9 @@ public class OutputTensorV1
         "roll",
     ];
 
-    public InboundState Read(ReadOnlySpan<float> tensor, GameState state)
+    public InboundState Read(ReadOnlySpan<float> tensor, AircraftState state)
     {
-        var builder = new ActionsBuilder(state.RawGameState);
+        var builder = new ActionsBuilder(state);
 
         var trigger = tensor[0] > 0;
         if (trigger)
