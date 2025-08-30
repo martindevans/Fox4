@@ -61,10 +61,10 @@ public sealed class Fox4
         _logDataset?.Dispose();
     }
 
-    public InboundState Update(AircraftState state)
+    public InboundState Update(AircraftState state, InboundState previousOutputs, AircraftState enemyState)
     {
         // Build inputs
-        var inputTensor = _inputBuilder.Build(state, Map.instance);
+        var inputTensor = _inputBuilder.Build(state, previousOutputs, Map.instance, enemyState);
         using var inputTensorOrt = OrtValue.CreateTensorValueFromMemory(OrtMemoryInfo.DefaultInstance, inputTensor.Buffer, [ 1, inputTensor.Length ]);
         var inputs = new Dictionary<string, OrtValue>
         {
@@ -81,7 +81,7 @@ public sealed class Fox4
         _logDataset?.Log(inputTensor.Buffer.Span, outputsArr);
 
         // Convert outputs to game actions
-        return _outputReader.Read(outputsArr, state);
+        return _outputReader.Read(outputsArr, previousOutputs, state);
     }
 
     private float[] ReadOutputs(IDisposableReadOnlyCollection<OrtValue> outputs)

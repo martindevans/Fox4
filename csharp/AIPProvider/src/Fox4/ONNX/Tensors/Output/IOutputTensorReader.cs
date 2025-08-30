@@ -6,7 +6,7 @@ public interface IOutputTensorReader
 {
     IReadOnlyList<string> Columns { get; }
 
-    InboundState Read(ReadOnlySpan<float> tensor, AircraftState state);
+    InboundState Read(ReadOnlySpan<float> tensor, InboundState previousOutputs, AircraftState state);
 }
 
 public static class OutputTensorReaderFactory

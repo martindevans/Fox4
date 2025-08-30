@@ -10,6 +10,7 @@ public class Fox4Provider
 {
     private static readonly List<Fox4Provider> _providers = [ ];
     private static float _lastUpdatedMagic;
+    private AircraftState _magicSensorState;
 
     private Fox4? _pilot;
 
@@ -17,7 +18,8 @@ public class Fox4Provider
     private bool _stopped;
 
     private InboundState _lastOutputs;
-    private AircraftState? _aircraftState;
+    private OutboundState _prevState;
+    private OutboundState _state;
 
     static Fox4Provider()
     {
@@ -71,14 +73,22 @@ public class Fox4Provider
         if (_stopped)
             return default;
 
+        // Whichever aircraft updates first sets up all of the sensor data for all aircraft. This means that _none_ of
+        // the aircraft have update yet, so we know everyone is getting consistent sensor data.
+        // ReSharper disable once CompareOfFloatsByEqualityOperator
+        if (_lastUpdatedMagic != state.time)
+        {
+            _lastUpdatedMagic = state.time;
+
+            foreach (var provider in _providers)
+                provider.UpdateMagicSensor();
+        }
+
         // Update gamestate every frame with current state. Doing this even before setup
         // is important, it means that when the pilot is called we have seen 2 states and
         // can calculate deltas
-        _aircraftState = new AircraftState(
-            prev: _aircraftState?.RawState ?? default,
-            state: state,
-            outputs: _lastOutputs
-        );
+        _prevState = _state;
+        _state = state;
 
         // Skip the very first step of the sim to avoid weird issues on the first frame
         if (!_setup)
@@ -90,8 +100,18 @@ public class Fox4Provider
         }
 
         // Call the actual pilot impl
-        _lastOutputs = _pilot!.Update(_aircraftState);
+        var aircraftState = new AircraftState(
+            prev: _prevState,
+            state: _state
+        );
+        _lastOutputs = _pilot!.Update(aircraftState, _lastOutputs, _magicSensorState);
         return _lastOutputs;
+    }
+
+    private void UpdateMagicSensor()
+    {
+        var other = _providers.Single(a => !ReferenceEquals(a, this));
+        _magicSensorState = new AircraftState(other._state, other._prevState);
     }
 }
 

@@ -10,13 +10,11 @@ public record AircraftState
 {
     public readonly OutboundState PreviousRawState;
     public readonly OutboundState RawState;
-    public readonly InboundState PreviousOutputs;
 
-    public AircraftState(OutboundState prev, OutboundState state, InboundState outputs)
+    public AircraftState(OutboundState prev, OutboundState state)
     {
         PreviousRawState = prev;
         RawState = state;
-        PreviousOutputs = outputs;
     }
 
     public float Time => RawState.time;
