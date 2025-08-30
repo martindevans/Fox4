@@ -53,8 +53,8 @@ def run_sims(path, count, parallel):
                 "noMap": True,
                 "debugEnemy": True,
                 "spawnDist": 0,
-                "alliedArgs": [ f"--log-tensors --output-rand-dev 1 --output-smoothing 0.0 --runid {str(uuid.uuid4())}" ],
-                "enemyArgs": [ f"--log-tensors --output-rand-dev 1 --output-smoothing 0.0 --runid {str(uuid.uuid4())}" ]
+                "alliedArgs": [ f"--log-tensors --output-rand-dev 1 --runid {str(uuid.uuid4())}" ],
+                "enemyArgs": [ f"--log-tensors --output-rand-dev 1 --runid {str(uuid.uuid4())}" ]
             }, indent=2))
         
         # Copy model into folder
@@ -76,16 +76,24 @@ def run_sims(path, count, parallel):
             for j in range(i, min(count, i + parallel)):
                 bat_path = Path(os.path.join(path, f"sim_{j}", "run.bat")).resolve()
                 procs.append(subprocess.Popen(bat_path, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT))
-            for p in procs:
-                p.wait()
-                pbar.update(1)
+            try:
+                for p in procs:
+                    p.wait()
+                    pbar.update(1)
+            except KeyboardInterrupt:
+                for p in procs:
+                    try:
+                        p.terminate()
+                    except OSError:
+                        pass
+                raise KeyboardInterrupt()
     
     # Cleanup
     for dirpath, _, filenames in os.walk(path):
-        if dirpath == path:  # skip root itself
+        if dirpath == path:
             continue
         for f in filenames:
-            if f.endswith(".onnx"):
+            if f.endswith(".onnx") or f.endswith(".json"):
                 os.remove(os.path.join(dirpath, f))
 
     # Postprocessing datasets
@@ -137,7 +145,10 @@ def run_sims(path, count, parallel):
             ScoreFunction.attach_score(df_input, df_output, df_extra)
             df_extra["score_cumulative"] = df_extra["score"].cumsum()
 
-            df_extra.to_csv(extra_file, index=False)
+            # Save all CSVs, rounding to 4 sig fig to save some space
+            df_extra.to_csv(extra_file, index=False, float_format="%.4g")
+            df_input.to_csv(in_file, index=False, float_format="%.4g")
+            df_output.to_csv(out_file, index=False, float_format="%.4g")
 
 
 def args_run_sims(args):
