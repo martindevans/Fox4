@@ -24,7 +24,6 @@ public record AircraftState
     public float DeltaFuel => (RawState.fuel - PreviousRawState.fuel) / DeltaTime;
 
     public Quaternion Orientation => RawState.kinematics.rotation.To();
-    public Quaternion AngularVelocity => RawState.kinematics.rotation.To();
 
     public Vector3 WorldPosition => RawState.kinematics.position.To();
     public Vector3 WorldVelocity => RawState.kinematics.velocity.To();

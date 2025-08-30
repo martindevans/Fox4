@@ -111,7 +111,7 @@ public class Fox4Provider
     private void UpdateMagicSensor()
     {
         var other = _providers.Single(a => !ReferenceEquals(a, this));
-        _magicSensorState = new AircraftState(other._state, other._prevState);
+        _magicSensorState = new AircraftState(other._prevState, other._state);
     }
 }
 
