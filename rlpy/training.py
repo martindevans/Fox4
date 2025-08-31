@@ -45,14 +45,14 @@ class PPOParameters():
 
         # List of (attribute, min, max) for mutation
         param_defs = [
-            ("gamma", 0.75, 1),
-            ("gae_lambda", 0.75, 1),
-            ("learning_rate", 1e-6, 1e-3),
-            ("clip_range", 0.1, 0.3),
-            ("value_coeff", 0.1, 0.7),
-            ("entropy_coeff", 0.001, 0.1),
-            ("large_entropy_coeff", 0.0, 0.1),
-            ("max_kl_divergence", 0.0001, 0.5),
+            ("gamma",               0.75, 1),
+            ("gae_lambda",          0.75, 1),
+            ("learning_rate",       0.0000001, 0.001),
+            ("clip_range",          0.1, 0.3),
+            ("value_coeff",         0.1, 0.7),
+            ("entropy_coeff",       0.0001, 0.1),
+            ("large_entropy_coeff", 0.0001, 0.1),
+            ("max_kl_divergence",   0.0001, 0.5),
         ]
 
         # Apply mutation to a copy of self
