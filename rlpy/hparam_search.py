@@ -322,9 +322,9 @@ def main():
         mutation_std=args.mutation_std,
         sim_count=args.sim_count,
         sim_parallel=args.sim_parallel,
-    seed=args.seed,
-    val_sims=args.val_sims,
-    val_parallel=(args.val_parallel if args.val_parallel is not None else args.sim_parallel),
+        seed=args.seed,
+        val_sims=args.val_sims,
+        val_parallel=(args.val_parallel if args.val_parallel is not None else args.sim_parallel),
     )
 
 
