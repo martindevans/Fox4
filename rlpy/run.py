@@ -204,7 +204,7 @@ def train_loop(path, generations, start_gen, sim_count, sim_parallel):
 
         # Output loss graph
         plt.clf()
-        df_log = pd.read_csv(os.path.join(path, f"loss_log.csv"))
+        df_log = pd.read_csv(os.path.join(path, f"loss_log.csv"), header=None)
         fig, ax1 = plt.subplots()
 
         # Plot first line on left y-axis
@@ -224,7 +224,7 @@ def train_loop(path, generations, start_gen, sim_count, sim_parallel):
         plt.clf()
 
         # Output reward graph
-        df_log = pd.read_csv(os.path.join(path, f"reward_log.csv"))
+        df_log = pd.read_csv(os.path.join(path, f"reward_log.csv"), header=None)
         plt.plot(df_log.iloc[:, 0], color='blue', label='Average Reward')
         plt.ylabel("Average Reward")
         plt.grid(True)
