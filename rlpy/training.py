@@ -10,7 +10,7 @@ import numpy as np
 import json
 
 class PPOParameters():
-    def __init__(self, gamma = 0.99, gae_lambda = 0.95, n_epochs = 10, batch_size = 128, learning_rate = 0.0001, clip_range = 0.15, value_coeff = 0.4, entropy_coeff = 0.005, large_entropy_coeff = 0.0):
+    def __init__(self, gamma = 0.99, gae_lambda = 0.95, n_epochs = 10, batch_size = 128, learning_rate = 0.0001, clip_range = 0.15, value_coeff = 0.4, entropy_coeff = 0.005, large_entropy_coeff = 0.0, max_kl_divergence = 0.125):
         """Hyperparameters for PPO training.
 
         @param: gamma Discount factor for future rewards
@@ -22,6 +22,7 @@ class PPOParameters():
         @param: value_coeff How much to weight the value loss
         @param: entropy_coeff slightly reward a larger entropy for distribution, keeping a bit of uncertainty is good
         @param: large_entropy_coeff Penalty for stddev over max limit
+        @param: max_kl_divergence Maximum change in kl divergence, once exceeded training is stopped early (moving on to the next round of sims)
         """
         self.gamma = gamma
         self.gae_lambda = gae_lambda
@@ -32,6 +33,7 @@ class PPOParameters():
         self.value_coeff = value_coeff
         self.entropy_coeff = entropy_coeff
         self.large_entropy_coeff = large_entropy_coeff
+        self.max_kl_divergence = max_kl_divergence
 
     def mutate(self, stddev, seed=None):
         """
@@ -50,6 +52,7 @@ class PPOParameters():
             ("value_coeff", 0.1, 0.7),
             ("entropy_coeff", 0.001, 0.1),
             ("large_entropy_coeff", 0.0, 0.1),
+            ("max_kl_divergence", 0.0001, 0.5),
         ]
 
         # Apply mutation to a copy of self
@@ -176,9 +179,11 @@ def train(model, dataset_in: pd.DataFrame, dataset_out: pd.DataFrame, dataset_ex
     losses = []
     entropies = []
 
+    # Used to break out of training for early stopping
+    stop_training = False
+
     for epoch in range(parameters.n_epochs):
         for batch in dataloader:
-
             # Unpack the minibatch of data
             batch_states, batch_actions, batch_old_log_probs, batch_advantages, batch_returns = batch
 
@@ -208,6 +213,17 @@ def train(model, dataset_in: pd.DataFrame, dataset_out: pd.DataFrame, dataset_ex
                  + parameters.large_entropy_coeff * std_penalty
             )
 
+            # Calculate an approximation of the KL divergence between the old and new policies
+            log_ratio = (new_log_probs - batch_old_log_probs)
+            kl_divergence = torch.mean((ratio - 1) - log_ratio)
+
+            # If the KL divergence exceeds the target stop the training for this epoch. This prevents the model
+            # from changing too much based on a single set of training data
+            if kl_divergence > parameters.max_kl_divergence:
+                stop_training = True
+                print(f"Max KL Divergence exceeded, early stopping. {kl_divergence} > {parameters.max_kl_divergence}")
+                break
+
             optimizer.zero_grad()
             loss.backward()
 
@@ -222,6 +238,10 @@ def train(model, dataset_in: pd.DataFrame, dataset_out: pd.DataFrame, dataset_ex
         value_loss = loss_value.item()
         losses.append((value_loss, policy_loss))
         print(f"{epoch}/{parameters.n_epochs} Policy Loss: {policy_loss:.3f}, Value Loss: {value_loss:.3f}")
+
+        # Break out if inner stopping condition was met
+        if stop_training:
+            break
 
     total_episodes = dataset_extra["done"].sum()
     avg_reward = dataset_extra["score"].sum() / total_episodes
