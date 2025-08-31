@@ -107,7 +107,7 @@ def evaluate_params(
         }, f, indent=2)
 
     #  Validate by running sims with the trained model to get a real reward
-    if val_sims and val_sims > 0:
+    if val_sims > 0:
         # Place trained model where run_sims expects it
         src_pth = candidate_dir / "artifacts" / "trained.pth"
         src_onnx = candidate_dir / "artifacts" / "trained.onnx"
