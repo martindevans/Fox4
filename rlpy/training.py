@@ -117,12 +117,12 @@ def load_datasets(generation_path, sim_count):
         df_outputs = pd.concat(all_outputs, ignore_index=True)
         df_extras = pd.concat(all_extras, ignore_index=True)
 
-    # Replace all NaN with 0
-    df_inputs.fillna(0, inplace=True)
-    df_outputs.fillna(0, inplace=True)
-    df_extras.fillna(0, inplace=True)
+        # Replace all NaN with 0
+        df_inputs.fillna(0, inplace=True)
+        df_outputs.fillna(0, inplace=True)
+        df_extras.fillna(0, inplace=True)
 
-    return (df_inputs, df_outputs, df_extras)
+        return (df_inputs, df_outputs, df_extras)
     
 
 def compute_gae_and_returns(rewards, values, dones, gamma, gae_lambda, device):
