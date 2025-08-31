@@ -213,9 +213,11 @@ def train(model, dataset_in: pd.DataFrame, dataset_out: pd.DataFrame, dataset_ex
                  + parameters.large_entropy_coeff * std_penalty
             )
 
-            # Calculate an approximation of the KL divergence between the old and new policies
+            # https://github.com/Chris-hughes10/simple-ppo/blob/main/simple_ppo/ppo.py#L649-L660
+            # Calculate the KL divergence of the model so far
             log_ratio = (new_log_probs - batch_old_log_probs)
-            kl_divergence = torch.mean((ratio - 1) - log_ratio)
+            with torch.no_grad():
+                kl_divergence = ((ratio - 1) - log_ratio).mean()
 
             # If the KL divergence exceeds the target stop the training for this epoch. This prevents the model
             # from changing too much based on a single set of training data
