@@ -35,7 +35,7 @@ public class InputTensorV2
         "prev_roll_in",
     ];
 
-    public DenseTensor<float> Build(GameState state, Map map)
+    public DenseTensor<float> Build(AircraftState state, InboundState previousOutputs, Map map, AircraftState enemy)
     {
         var speed = state.Speed;
         var localDir = state.LocalVelocity / speed;
@@ -71,9 +71,9 @@ public class InputTensorV2
             state.DeltaRoll / ANGLE_RATE_NORM,
 
             // Previous inputs
-            state.PreviousOutputs.pyr.x,
-            state.PreviousOutputs.pyr.y,
-            state.PreviousOutputs.pyr.z,
+            previousOutputs.pyr.x,
+            previousOutputs.pyr.y,
+            previousOutputs.pyr.z,
         ];
 
         return new DenseTensor<float>(data, [1, data.Length]);

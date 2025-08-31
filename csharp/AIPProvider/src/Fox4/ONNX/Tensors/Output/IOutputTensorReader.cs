@@ -6,7 +6,7 @@ public interface IOutputTensorReader
 {
     IReadOnlyList<string> Columns { get; }
 
-    InboundState Read(ReadOnlySpan<float> tensor, GameState state);
+    InboundState Read(ReadOnlySpan<float> tensor, InboundState previousOutputs, AircraftState state);
 }
 
 public static class OutputTensorReaderFactory
@@ -15,8 +15,9 @@ public static class OutputTensorReaderFactory
     {
         return (version) switch
         {
-            "v1" => new OutputTensorV1(),
-            "v2" => new OutputTensorV2(),
+            "v1"         => new OutputTensorV1(),
+            "v2"         => new OutputTensorV2(false),
+            "v2-trigger" => new OutputTensorV2(true),
 
             _ => throw new ArgumentException($"Unknown output tensor type: {version}")
         };

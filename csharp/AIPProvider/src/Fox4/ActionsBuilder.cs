@@ -17,6 +17,11 @@ public class ActionsBuilder
     {
         _state = state;
     }
+    
+    public ActionsBuilder(AircraftState state)
+    {
+        _state = state.RawState;
+    }
 
     public int[] Build()
     {

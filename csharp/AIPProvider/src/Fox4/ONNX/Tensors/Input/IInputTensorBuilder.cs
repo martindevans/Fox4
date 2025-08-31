@@ -7,7 +7,7 @@ public interface IInputTensorBuilder
 {
     IReadOnlyList<string> Columns { get; }
 
-    DenseTensor<float> Build(GameState state, Map map);
+    DenseTensor<float> Build(AircraftState state, InboundState previousOutputs, Map map, AircraftState enemy);
 }
 
 public static class InputTensorBuilderFactory
@@ -19,6 +19,7 @@ public static class InputTensorBuilderFactory
             "v1" => new InputTensorV1(),
             "v2" => new InputTensorV2(),
             "v3" => new InputTensorV3(),
+            "v4" => new InputTensorV4(),
 
             _ => throw new ArgumentException($"Unknown input tensor type: {version}")
         };

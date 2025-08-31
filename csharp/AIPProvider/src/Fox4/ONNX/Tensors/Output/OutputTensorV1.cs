@@ -19,9 +19,9 @@ public class OutputTensorV1
         "roll",
     ];
 
-    public InboundState Read(ReadOnlySpan<float> tensor, GameState state)
+    public InboundState Read(ReadOnlySpan<float> tensor, InboundState previousOutputs, AircraftState state)
     {
-        var builder = new ActionsBuilder(state.RawGameState);
+        var builder = new ActionsBuilder(state);
 
         var trigger = tensor[0] > 0;
         if (trigger)
@@ -31,9 +31,9 @@ public class OutputTensorV1
         var afterburner = tensor[2] > 0;
 
         var recenter = MathF.Pow(1 - RECENTERING, state.DeltaTime);
-        var pitch = Math.Clamp(state.PreviousOutputs.pyr.x * recenter + tensor[3] * 2 * state.DeltaTime, -1, 1);
-        var yaw = Math.Clamp(state.PreviousOutputs.pyr.y * recenter + tensor[4] * state.DeltaTime, -1, 1);
-        var roll = Math.Clamp(state.PreviousOutputs.pyr.z * recenter + tensor[5] * 2 * state.DeltaTime, -1, 1);
+        var pitch = Math.Clamp(previousOutputs.pyr.x * recenter + tensor[3] * 2 * state.DeltaTime, -1, 1);
+        var yaw = Math.Clamp(previousOutputs.pyr.y * recenter + tensor[4] * state.DeltaTime, -1, 1);
+        var roll = Math.Clamp(previousOutputs.pyr.z * recenter + tensor[5] * 2 * state.DeltaTime, -1, 1);
 
         return new InboundState
         {

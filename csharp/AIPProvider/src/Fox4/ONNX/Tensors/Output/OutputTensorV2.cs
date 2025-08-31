@@ -2,7 +2,7 @@
 
 namespace AIPProvider.Fox4.ONNX.Tensors.Output;
 
-public class OutputTensorV2
+public class OutputTensorV2(bool _trigger)
     : IOutputTensorReader
 {
     /// <summary>
@@ -21,23 +21,23 @@ public class OutputTensorV2
         "roll",
     ];
 
-    public InboundState Read(ReadOnlySpan<float> tensor, GameState state)
+    public InboundState Read(ReadOnlySpan<float> tensor, InboundState previousOutputs, AircraftState state)
     {
-        var builder = new ActionsBuilder(state.RawGameState);
+        var builder = new ActionsBuilder(state);
 
-        //// Gun trigger
-        //var trigger = tensor[0] > 0;
-        //if (trigger)
-        //    builder.TryFire(WeaponType.Guns);
+        // Gun trigger
+        var trigger = tensor[0] > 0;
+        if (_trigger && trigger)
+            builder.TryFire(WeaponType.Guns);
 
         // Delta throttle control
-        var throttle = Math.Clamp(state.PreviousOutputs.throttle + tensor[1] * 2 * state.DeltaTime, 0, 1);
+        var throttle = Math.Clamp(previousOutputs.throttle + tensor[1] * 2 * state.DeltaTime, 0, 1);
 
         // Delta stick control with auto recentering
         var recenter = MathF.Pow(1 - RECENTERING, state.DeltaTime);
-        var pitch    = Math.Clamp(state.PreviousOutputs.pyr.x * recenter + tensor[2] * 2 * state.DeltaTime, -1, 1);
-        var yaw      = Math.Clamp(state.PreviousOutputs.pyr.y * recenter + tensor[3] * 1 * state.DeltaTime, -1, 1);
-        var roll     = Math.Clamp(state.PreviousOutputs.pyr.z * recenter + tensor[4] * 2 * state.DeltaTime, -1, 1);
+        var pitch    = Math.Clamp(previousOutputs.pyr.x * recenter + tensor[2] * 2 * state.DeltaTime, -1, 1);
+        var yaw      = Math.Clamp(previousOutputs.pyr.y * recenter + tensor[3] * 1 * state.DeltaTime, -1, 1);
+        var roll     = Math.Clamp(previousOutputs.pyr.z * recenter + tensor[4] * 2 * state.DeltaTime, -1, 1);
 
         return new InboundState
         {
